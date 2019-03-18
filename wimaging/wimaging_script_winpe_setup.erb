@@ -12,10 +12,6 @@ params:
 - wimImageName: Windows 8.1 Pro # name of wim image to apply
 - windowsLicenseKey: ABCDE-ABCDE-ABCDE-ABCDE-ABCDE # Valid Windows license key
 - windowsLicenseOwner: Company, INC # Legal owner of the Windows license key
-- extraFilesCutDirs: directories wget should strip when downloading extra files.
-%>
-<%
-  cut_dirs = @host.params['extraFilesCutDirs'] ? @host.params['extraFilesCutDirs'] : '3'
 %>
 @echo off
 set WGET=x:\wimaging\deploy\wget64.exe
@@ -33,29 +29,76 @@ del /q /s C:\install.wim
 ::Set the proper boot sector
 bootsect.exe /nt60 C:
 C:\Windows\System32\bcdboot C:\Windows /l en-US
- 
-echo Downloading the drivers 
+
+
+echo . 
+echo .Verify alternate path driver switch.
+echo .
+<% if host_param('DriverFTPRoot') -%>
+    echo .* Switch Detected, Acquiring System Family.
+    for /f "tokens=*" %%f in ('wmic computersystem get systemfamily /value ^| find "="') do set "%%f"
+    IF ["%systemfamily%"]==[""] (
+        echo .* System Family cannot be acquired on this system, Driver will be acquired from default setup.
+        set DefaultDriverPath=true
+        goto DriverSelected
+    )
+    
+    echo .* System Family Acquired, Validating if System Family Drivers folder exist.
+    set FTPDriverPath=<%= @host.os.medium_uri(@host).to_s %><%= host_param('DriverFTPRoot') %>%systemfamily%/
+    :CheckFTPForDriver
+    %WGET% --server-response "%FTPDriverPath%" 2> C:\ftplog.txt
+    findstr /C:"--> PASV" C:\ftplog.txt>nul && (echo .* * Driver Folder found on FTP server. & goto DriverSelected)
+    echo .
+    echo .* * Driver Folder Not Found for this System Family: "%systemfamily%"
+    echo .* * Download the drivers and add them to this folder: 
+    echo ."%FTPDriverPath%"
+    echo .
+    echo +-------------------------------------- Input Required --------------------------------------------
+    set /P _Retry=Type "r" to Retry or anything else to continue with default drivers: || Set _Retry=Nothing 
+    If /i "%_Retry%"=="r" (
+        goto CheckFTPForDriver
+    ) else ( 
+        set DefaultDriverPath=true)
+    )
+    :DriverSelected
+
+<% else %>
+
+    echo .* OS Driver default folder selected
+    set DefaultDriverPath=true
+<% end -%>
+
+if ["%DefaultDriverPath%"]==["true"] (
+    set FTPDriverPath=<%= @host.os.medium_uri(@host).to_s %>/drivers/ 
+)
+
+echo .
+echo .Downloading the drivers from "%FTPDriverPath%" 
 md c:\drivers
-%WGET% -P c:\drivers -r -np -nH --cut-dirs=<%= cut_dirs %> -R index.html -q --level=0 <%= @host.os.medium_uri(@host).to_s %>/drivers/
+%WGET% -P c:\drivers -r -np -nH --cut-dirs=3 -R index.html -q --level=0 "%FTPDriverPath%"
+
 
 <% if snippets "Wimaging extraFinishCommands" -%>
-  echo Downloading extras
+  echo . 
+  echo .Downloading extras
   md C:\Extras
-  %WGET% -P c:\Extras -r -np -nH --cut-dirs=<%= cut_dirs %> -R index.html -q --level=0 <%= @host.os.medium_uri(@host).to_s %>/extras/
+  %WGET% -P c:\Extras -r -np -nH --cut-dirs=3 -R index.html -q --level=0 <%= @host.os.medium_uri(@host).to_s %>/extras/
 <% end -%>
- 
-echo Stage the Unattend.xml file for dism to apply
+
+echo .
+echo .Stage the Unattend.xml file for dism to apply
 set myDIR=c:\Windows\Panther\
 IF not exist %myDIR% (mkdir %myDIR%)
 
-echo Downloading unattend.xml
+echo .
+echo .Downloading unattend.xml
 %WGET% --no-verbose <%= foreman_url("provision") -%> -O c:\Windows\Panther\unattend.xml
 
-echo Downloading finsh script and activating SetupComplete.cmd
+echo .Downloading finsh script and activating SetupComplete.cmd
 md c:\deploy
 %WGET% --no-verbose <%= foreman_url("finish") -%> -O C:\deploy\foreman-finish.bat
 
-echo copy tools
+echo .copy tools
 copy x:\wimaging\deploy\wget64.exe C:\deploy\
 copy x:\wimaging\deploy\wget64.exe C:\Windows\wget.exe
 copy x:\wimaging\deploy\sdelete.exe C:\Windows\
@@ -63,23 +106,21 @@ IF not exist C:\Windows\Setup\Scripts (md C:\Windows\Setup\Scripts)
 echo call C:\deploy\foreman-finish.bat ^> c:\foreman.log 2^>^&1 > C:\Windows\Setup\Scripts\SetupComplete.cmd
 
 <% if foreman_url('user_data') %>
-  echo Downlodiang user data
+  echo .Downloading user data
   %WGET% <%= foreman_url('user_data') %> -O c:\deploy\joinDomain.ps1
 <% end -%>
   
-echo Creating a temp staging folder for DISM
+echo .Creating a temp staging folder for DISM
 md c:\MININT\Scratch
 
-echo Apply Unattend.xml
+echo .Apply Unattend.xml
 dism.exe /Image:C:\ /Apply-Unattend:c:\Windows\Panther\unattend.xml /ScratchDir:C:\MININT\Scratch/
 
-echo Apply Drivers
+echo .Apply Drivers
 dism.exe /Image:C:\ /Add-Driver /Driver:c:\drivers\ /Recurse /ForceUnsigned
 
-<% if @host.params['pesetup_additional_triggers'] -%>
-  <%= snippets "Wimaging peSetup.cmd additional triggers" %>
-<% end -%>
-
 :: Uncomment PAUSE for debug:
-::PAUSE
+<% if host_param('Debug') -%>
+    PAUSE
+<% end -%>
 exit 0
