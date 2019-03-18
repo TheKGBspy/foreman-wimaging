@@ -9,16 +9,13 @@ oses:
 - Windows
 # create extra local user accounts for debugging; otherwise you might be locked out.
 # Warning: Commented out by default
-%>
-<!--
-     <LocalAccounts>
+%>   <LocalAccounts>
          <LocalAccount wcm:action="add">
              <Password>
-               <Value>Pa55w@rd=</Value>
-               <PlainText>true</PlainText>
+               <Value><%= Base64.encode64(Encoding::Converter.new("UTF-8", "UTF-16LE",:undef => nil).convert("LocalPassPassword")).delete!("\n").chomp %></Value>
+               <PlainText>false</PlainText>
              </Password>
-             <Name>admin</Name>
+             <Name>LocalUsername</Name>
              <Group>Administrators</Group>
          </LocalAccount>
      </LocalAccounts>
--->
