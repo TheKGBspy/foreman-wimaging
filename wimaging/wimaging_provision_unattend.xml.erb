@@ -34,7 +34,7 @@ params:
                 <OSImage>
                     <InstallFrom>
                         <MetaData wcm:action="add">
-                                <Value><%= @host.params['wimImageName'] -%></Value>  
+                                <Value><%= host_param('wimImageName') -%></Value>  
                         </MetaData>
                     </InstallFrom>
                     <InstallToAvailablePartition>true</InstallToAvailablePartition>
@@ -49,12 +49,12 @@ params:
             <SetupUILanguage>
                 <UILanguage>en-US</UILanguage>
             </SetupUILanguage>
-            <% if @host.params['systemLocale'] -%>
-              <InputLocale><%= @host.params['systemLocale'] %></InputLocale>
-              <SystemLocale><%= @host.params['systemLocale'] %></SystemLocale>
+            <% if host_param('systemLocale') -%>
+              <InputLocale><%= host_param('systemLocale') %></InputLocale>
+              <SystemLocale><%= host_param('systemLocale') %></SystemLocale>
               <UILanguageFallback>en-US</UILanguageFallback>
-              <UILanguage><%= @host.params['systemUILanguage'] %></UILanguage>
-              <UserLocale><%= @host.params['systemLocale'] %></UserLocale>
+              <UILanguage><%= host_param('systemUILanguage') %></UILanguage>
+              <UserLocale><%= host_param('systemLocale') %></UserLocale>
             <% else -%>
                <InputLocale>en-US</InputLocale>
               <SystemLocale>en-US</SystemLocale>
@@ -66,12 +66,12 @@ params:
     </settings>
     <settings pass="oobeSystem">
         <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <% if @host.params['systemLocale'] -%>
-              <InputLocale><%= @host.params['systemLocale'] -%></InputLocale>
-              <SystemLocale><%= @host.params['systemLocale'] -%></SystemLocale>
-              <UILanguageFallback><%= @host.params['systemUILanguage'] -%></UILanguageFallback>
-              <UILanguage><%= @host.params['systemUILanguage'] -%></UILanguage>
-              <UserLocale><%= @host.params['systemLocale'] -%></UserLocale>
+            <% if host_param('systemLocale') -%>
+              <InputLocale><%= host_param('systemLocale') -%></InputLocale>
+              <SystemLocale><%= host_param('systemLocale') -%></SystemLocale>
+              <UILanguageFallback><%= host_param('systemUILanguage') -%></UILanguageFallback>
+              <UILanguage><%= host_param('systemUILanguage') -%></UILanguage>
+              <UserLocale><%= host_param('systemLocale') -%></UserLocale>
             <% else -%>
                <InputLocale>en-US</InputLocale>
               <SystemLocale>en-US</SystemLocale>
@@ -88,10 +88,10 @@ params:
                 </AdministratorPassword>
                 <%= snippet_if_exists('Wimaging local users') -%>
             </UserAccounts>
-            <TimeZone><%= @host.params['systemTimeZone'] -%></TimeZone>
-            <% if @host.params['windowsLicenseOwner'] -%>
-              <RegisteredOrganization><%= @host.params['windowsLicenseOwner'] -%></RegisteredOrganization>
-              <RegisteredOwner><%= @host.params['windowsLicenseOwner'] -%></RegisteredOwner>
+            <TimeZone><%= host_param('systemTimeZone') -%></TimeZone>
+            <% if host_param('windowsLicenseOwner') -%>
+              <RegisteredOrganization><%= host_param('windowsLicenseOwner') -%></RegisteredOrganization>
+              <RegisteredOwner><%= host_param('windowsLicenseOwner') -%></RegisteredOwner>
             <% end -%>
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
@@ -109,12 +109,12 @@ params:
     </settings>
     <settings pass="specialize">
         <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <% if @host.params['systemLocale'] -%>
-              <InputLocale><%= @host.params['systemLocale'] -%></InputLocale>
-              <SystemLocale><%= @host.params['systemLocale'] -%></SystemLocale>
-              <UILanguage><%= @host.params['systemUILanguage'] -%></UILanguage>
+            <% if host_param('systemLocale') -%>
+              <InputLocale><%= host_param('systemLocale') -%></InputLocale>
+              <SystemLocale><%= host_param('systemLocale') -%></SystemLocale>
+              <UILanguage><%= host_param('systemUILanguage') -%></UILanguage>
               <UILanguageFallback>en-US</UILanguageFallback>
-              <UserLocale><%= @host.params['systemLocale'] -%></UserLocale>
+              <UserLocale><%= host_param('systemLocale') -%></UserLocale>
             <% else -%>
               <InputLocale>en-US</InputLocale>
               <SystemLocale>en-US</SystemLocale>
@@ -128,12 +128,12 @@ params:
         </component>
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <ComputerName><%= @host.shortname -%></ComputerName>
-            <% if @host.params['windowsLicenseOwner'] -%>
-              <RegisteredOrganization><%= @host.params['windowsLicenseOwner'] -%></RegisteredOrganization>
-              <RegisteredOwner><%= @host.params['windowsLicenseOwner'] -%></RegisteredOwner>
+            <% if host_param('windowsLicenseOwner') -%>
+              <RegisteredOrganization><%= host_param('windowsLicenseOwner') -%></RegisteredOrganization>
+              <RegisteredOwner><%= host_param('windowsLicenseOwner') -%></RegisteredOwner>
             <% end -%>
-            <% if @host.params['systemTimeZone'] -%>
-              <TimeZone><%= @host.params['systemTimeZone'] -%></TimeZone>
+            <% if host_param('systemTimeZone') -%>
+              <TimeZone><%= host_param('systemTimeZone') -%></TimeZone>
             <% else -%>
               <TimeZone>Pacific Standard Time</TimeZone>
             <% end -%>
