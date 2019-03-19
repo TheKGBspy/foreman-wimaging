@@ -12,6 +12,8 @@ params:
 - wimImageName: Windows 8.1 Pro # name of wim image to apply
 - windowsLicenseKey: ABCDE-ABCDE-ABCDE-ABCDE-ABCDE # Valid Windows license key
 - windowsLicenseOwner: Company, INC # Legal owner of the Windows license key
+- DriverFTPRoot: Set different root path from the os path for driver. ex: ../../DriverBank/
+- Debug: if set/exist with any value, this will make this execution pause before the first reboot.
 %>
 @echo off
 set WGET=x:\wimaging\deploy\wget64.exe
@@ -21,7 +23,7 @@ set WGET=x:\wimaging\deploy\wget64.exe
 %WGET% <%= @host.os.medium_uri(@host).to_s %>/sources/install.wim -O C:\install.wim
 
 echo Write the install image to the partition
-dism.exe /apply-image /imagefile:C:\install.wim /name:"<%= @host.params['wimImageName'] %>" /ApplyDir:C:\
+dism.exe /apply-image /imagefile:C:\install.wim /name:"<%= host_param('wimImageName') %>" /ApplyDir:C:\
 
 echo removing install.wim
 del /q /s C:\install.wim
@@ -58,7 +60,7 @@ echo .
     If /i "%_Retry%"=="r" (
         goto CheckFTPForDriver
     ) else ( 
-        set DefaultDriverPath=true)
+        set DefaultDriverPath=true
     )
     :DriverSelected
 
